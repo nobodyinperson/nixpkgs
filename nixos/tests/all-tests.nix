@@ -1265,6 +1265,7 @@ in
   pgadmin4 = runTest ./pgadmin4.nix;
   pgbackrest = import ./pgbackrest { inherit runTest; };
   pgbouncer = runTest ./pgbouncer.nix;
+  overleaf = handleTest ./overleaf.nix {};
   pghero = runTest ./pghero.nix;
   pgmanage = runTest ./pgmanage.nix;
   pgweb = runTest ./pgweb.nix;
