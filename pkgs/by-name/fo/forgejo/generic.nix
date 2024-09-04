@@ -1,6 +1,7 @@
 { lts ? false
 , version
 , rev ? null
+, srcOverrides ? {}
 , hash
 , npmDepsHash
 , vendorHash
@@ -29,13 +30,13 @@
 
 let
   versionString = if builtins.isString rev then "${version}-${rev}" else version;
-  src = fetchFromGitea {
+  src = fetchFromGitea ({
     domain = "codeberg.org";
     owner = "forgejo";
     repo = "forgejo";
     rev = if builtins.isString rev then rev else "v${version}";
     inherit hash;
-  };
+  } // srcOverrides);
 
   frontend = buildNpmPackage {
     pname = "forgejo-frontend";
