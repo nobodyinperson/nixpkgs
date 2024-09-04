@@ -18,6 +18,7 @@
 , nixosTests
 , openssh
 , sqliteSupport ? true
+, extraRuntimeInputs
 , xorg
 , runCommand
 , stdenv
@@ -124,7 +125,7 @@ buildGoModule rec {
     mkdir -p $out
     cp -R ./options/locale $out/locale
     wrapProgram $out/bin/gitea \
-      --prefix PATH : ${lib.makeBinPath [ bash git gzip openssh ]}
+      --prefix PATH : ${lib.makeBinPath ([ bash git gzip openssh ] ++ extraRuntimeInputs)}
   '';
 
   # $data is not available in goModules.drv
