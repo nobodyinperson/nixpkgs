@@ -19,7 +19,7 @@
 , nixosTests
 , openssh
 , sqliteSupport ? true
-, extraRuntimeInputs
+, extraRuntimeInputs ? []
 , xorg
 , runCommand
 , stdenv
