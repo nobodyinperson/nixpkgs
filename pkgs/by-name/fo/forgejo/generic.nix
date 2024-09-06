@@ -1,42 +1,48 @@
-{ lts ? false
-, version
-, rev ? null
-, src ? null
-, hash
-, npmDepsHash
-, vendorHash
-, extraRuntimeInputs ? [ ]
-, nixUpdateExtraArgs ? [ ]
+{
+  lts ? false,
+  version,
+  rev ? null,
+  src ? null,
+  hash,
+  npmDepsHash,
+  vendorHash,
+  extraRuntimeInputs ? [ ],
+  nixUpdateExtraArgs ? [ ],
 }:
 
-{ bash
-, brotli
-, buildGoModule
-, forgejo
-, git
-, gzip
-, lib
-, makeWrapper
-, nix-update-script
-, nixosTests
-, openssh
-, sqliteSupport ? true
-, xorg
-, runCommand
-, stdenv
-, fetchFromGitea
-, buildNpmPackage
+{
+  bash,
+  brotli,
+  buildGoModule,
+  forgejo,
+  git,
+  gzip,
+  lib,
+  makeWrapper,
+  nix-update-script,
+  nixosTests,
+  openssh,
+  sqliteSupport ? true,
+  xorg,
+  runCommand,
+  stdenv,
+  fetchFromGitea,
+  buildNpmPackage,
 }:
 
 let
   versionString = if builtins.isString rev then "${version}-${rev}" else version;
-  src = if ! builtins.isNull src then src else fetchFromGitea ({
-    domain = "codeberg.org";
-    owner = "forgejo";
-    repo = "forgejo";
-    rev = if builtins.isString rev then rev else "v${version}";
-    inherit hash;
-  });
+  src =
+    if !builtins.isNull src then
+      src
+    else
+      fetchFromGitea ({
+        domain = "codeberg.org";
+        owner = "forgejo";
+        repo = "forgejo";
+        rev = if builtins.isString rev then rev else "v${version}";
+        inherit hash;
+      });
 
   frontend = buildNpmPackage {
     pname = "forgejo-frontend";
@@ -61,11 +67,17 @@ buildGoModule rec {
   inherit
     src
     vendorHash
-  ;
+    ;
 
-  subPackages = [ "." "contrib/environment-to-ini" ];
+  subPackages = [
+    "."
+    "contrib/environment-to-ini"
+  ];
 
-  outputs = [ "out" "data" ];
+  outputs = [
+    "out"
+    "data"
+  ];
 
   nativeBuildInputs = [
     makeWrapper
@@ -84,7 +96,10 @@ buildGoModule rec {
     substituteInPlace modules/setting/server.go --subst-var data
   '';
 
-  tags = lib.optionals sqliteSupport [ "sqlite" "sqlite_unlock_notify" ];
+  tags = lib.optionals sqliteSupport [
+    "sqlite"
+    "sqlite_unlock_notify"
+  ];
 
   ldflags = [
     "-s"
@@ -129,29 +144,47 @@ buildGoModule rec {
     mkdir -p $out
     cp -R ./options/locale $out/locale
     wrapProgram $out/bin/gitea \
-      --prefix PATH : ${lib.makeBinPath ([ bash git gzip openssh ] ++ extraRuntimeInputs)}
+      --prefix PATH : ${
+        lib.makeBinPath (
+          [
+            bash
+            git
+            gzip
+            openssh
+          ]
+          ++ extraRuntimeInputs
+        )
+      }
   '';
 
   # $data is not available in goModules.drv
-  overrideModAttrs = (_: {
-    postPatch = null;
-  });
+  overrideModAttrs = (
+    _: {
+      postPatch = null;
+    }
+  );
 
   passthru = {
     # allow nix-update to handle npmDepsHash
     inherit (frontend) npmDeps;
 
-    data-compressed = runCommand "forgejo-data-compressed" {
-      nativeBuildInputs = [ brotli xorg.lndir ];
-    } ''
-      mkdir $out
-      lndir ${forgejo.data}/ $out/
+    data-compressed =
+      runCommand "forgejo-data-compressed"
+        {
+          nativeBuildInputs = [
+            brotli
+            xorg.lndir
+          ];
+        }
+        ''
+          mkdir $out
+          lndir ${forgejo.data}/ $out/
 
-      # Create static gzip and brotli files
-      find -L $out -type f -regextype posix-extended -iregex '.*\.(css|html|js|svg|ttf|txt)' \
-        -exec gzip --best --keep --force {} ';' \
-        -exec brotli --best --keep --no-copy-stat {} ';'
-    '';
+          # Create static gzip and brotli files
+          find -L $out -type f -regextype posix-extended -iregex '.*\.(css|html|js|svg|ttf|txt)' \
+            -exec gzip --best --keep --force {} ';' \
+            -exec brotli --best --keep --no-copy-stat {} ';'
+        '';
 
     tests = if lts then nixosTests.forgejo-lts else nixosTests.forgejo;
     updateScript = nix-update-script { extraArgs = nixUpdateExtraArgs; };
@@ -162,7 +195,12 @@ buildGoModule rec {
     homepage = "https://forgejo.org";
     changelog = "https://codeberg.org/forgejo/forgejo/releases/tag/v${version}";
     license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [ emilylange urandom bendlas adamcstephens ];
+    maintainers = with lib.maintainers; [
+      emilylange
+      urandom
+      bendlas
+      adamcstephens
+    ];
     broken = stdenv.isDarwin;
     mainProgram = "gitea";
   };
