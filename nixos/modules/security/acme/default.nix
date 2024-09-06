@@ -222,6 +222,7 @@ let
       ++ optionals (data.dnsResolver != null) [ "--dns.resolvers" data.dnsResolver ]
     ) else if data.s3Bucket != null then [ "--http" "--http.s3-bucket" data.s3Bucket ]
     else if data.listenHTTP != null then [ "--http" "--http.port" data.listenHTTP ]
+    else if data.tlsMode then [ "--tls" "--tls.port" ":${toString data.tlsPort}" ]
     else [ "--http" "--http.webroot" data.webroot ];
 
     commonOpts = [
@@ -334,6 +335,7 @@ let
 
     renewService = lockfileName: {
       description = "Renew ACME certificate for ${cert}";
+      conflicts = data.conflictingServices;
       after = [ "network.target" "network-online.target" "acme-fixperms.service" "nss-lookup.target" ] ++ selfsignedDeps ++ optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
       wants = [ "network-online.target" "acme-fixperms.service" ] ++ selfsignedDeps ++ optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
 
@@ -377,20 +379,31 @@ let
           (mapAttrsToList (k: v: "${k}:${v}") data.credentialFiles);
 
         # Run as root (Prefixed with +)
-        ExecStartPost = "+" + (pkgs.writeShellScript "acme-postrun" ''
+        ExecStartPost =
+          let
+            manageServices =
+              cmd: services:
+              optionalString (services != [ ]) "systemctl --no-block ${cmd} ${escapeShellArgs services}";
+          in "+" + (pkgs.writeShellScript "acme-postrun" ''
           cd /var/lib/acme/${escapeShellArg cert}
+          ${manageServices "reload-or-restart" data.conflictingServices}
           if [ -e renewed ]; then
             rm renewed
             ${data.postRun}
-            ${optionalString (data.reloadServices != [])
-                "systemctl --no-block try-reload-or-restart ${escapeShellArgs data.reloadServices}"
-            }
+            ${manageServices "try-reload-or-restart" data.reloadServices}
           fi
         '');
-      } // optionalAttrs (data.listenHTTP != null && toInt (last (splitString ":" data.listenHTTP)) < 1024) {
-        CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
-        AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
-      };
+      } // (
+        let
+          needsToOpenPrivilegedPort =
+            (data.listenHTTP != null && toInt (last (splitString ":" data.listenHTTP)) < 1024)
+            || (data.tlsMode && data.tlsPort < 1024);
+        in
+        optionalAttrs needsToOpenPrivilegedPort {
+          CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
+          AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
+        }
+      );
 
       # Working directory will be /tmp
       script = (if (lockfileName == null) then lib.id else wrapInFlock "${lockdir}${lockfileName}") ''
@@ -572,6 +585,19 @@ let
         description = "Group running the ACME client.";
       };
 
+      conflictingServices = mkOption {
+        type = types.listOf types.str;
+        inherit (defaultAndText "conflictingServices" [ ]) default defaultText;
+        description = ''
+          List of conflicting systemd services that should be temporarily stopped
+          while renewing/checking certificates. This might be necessary with `tlsMode=true`
+          when a webserver occupies the `tlsPort`.
+        '';
+        example = ''
+          [ "nginx.service" ] # stops nginx temporarily while renewing/checking certificates
+        '';
+      };
+
       reloadServices = mkOption {
         type = types.listOf types.str;
         inherit (defaultAndText "reloadServices" []) default defaultText;
@@ -622,6 +648,18 @@ let
           host:port. The default is to use the system resolvers, or Google's DNS
           resolvers if the system's cannot be determined.
         '';
+      };
+
+      tlsMode = mkOption {
+        type = types.bool;
+        inherit (defaultAndText "tlsMode" false) default defaultText;
+        description = "Use TLS challenge instead of HTTP.";
+      };
+
+      tlsPort = mkOption {
+        type = types.port;
+        inherit (defaultAndText "tlsPort" 443) default defaultText;
+        description = "Port to use for TLS challenge.";
       };
 
       environmentFile = mkOption {
