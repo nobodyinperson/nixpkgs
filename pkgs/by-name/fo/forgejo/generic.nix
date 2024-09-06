@@ -2,7 +2,7 @@
   lts ? false,
   version,
   rev ? null,
-  src ? null,
+  srcOverride ? null,
   hash,
   npmDepsHash,
   vendorHash,
@@ -33,8 +33,8 @@
 let
   versionString = if builtins.isString rev then "${version}-${rev}" else version;
   src =
-    if !builtins.isNull src then
-      src
+    if !builtins.isNull srcOverride then
+      srcOverride
     else
       fetchFromGitea ({
         domain = "codeberg.org";
