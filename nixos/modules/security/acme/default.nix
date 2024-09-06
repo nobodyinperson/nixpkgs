@@ -422,6 +422,7 @@ let
 
       renewService = lockfileName: {
         description = "Renew ACME certificate for ${cert}";
+        conflicts = data.conflictingServices;
         after = [
           "network.target"
           "network-online.target"
@@ -479,17 +480,19 @@ let
 
             # Run as root (Prefixed with +)
             ExecStartPost =
+              let
+                manageServices =
+                  cmd: services:
+                  optionalString (services != [ ]) "systemctl --no-block ${cmd} ${escapeShellArgs services}";
+              in
               "+"
               + (pkgs.writeShellScript "acme-postrun" ''
                 cd /var/lib/acme/${escapeShellArg cert}
+                ${manageServices "reload-or-restart" data.conflictingServices}
                 if [ -e renewed ]; then
                   rm renewed
                   ${data.postRun}
-                  ${
-                    optionalString (
-                      data.reloadServices != [ ]
-                    ) "systemctl --no-block try-reload-or-restart ${escapeShellArgs data.reloadServices}"
-                  }
+                  ${manageServices "try-reload-or-restart" data.reloadServices}
                 fi
               '');
           }
@@ -689,6 +692,19 @@ let
           type = types.str;
           inherit (defaultAndText "group" "acme") default defaultText;
           description = "Group running the ACME client.";
+        };
+
+        conflictingServices = mkOption {
+          type = types.listOf types.str;
+          inherit (defaultAndText "conflictingServices" [ ]) default defaultText;
+          description = ''
+            List of conflicting systemd services that should be temporarily stopped
+            while renewing/checking certificates. This might be necessary with `tlsMode=true`
+            when a webserver occupies the `tlsPort`.
+          '';
+          example = ''
+            [ "nginx.service" ] # stops nginx temporarily while renewing/checking certificates
+          '';
         };
 
         reloadServices = mkOption {
