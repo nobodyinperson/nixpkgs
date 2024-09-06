@@ -280,6 +280,13 @@ let
             "--http.port"
             data.listenHTTP
           ]
+        # TODO: why is defaults.tlsMode not applied to data.tlsMode so we have to do this (incorrect) or-ing?
+        else if data.tlsMode || cfg.defaults.tlsMode then
+          [
+            "--tls"
+            "--tls.port"
+            ":${toString data.tlsPort}"
+          ]
         else
           [
             "--http"
@@ -732,8 +739,16 @@ let
           '';
         };
 
-        environmentFile = mkOption {
-          type = types.nullOr types.path;
+        tlsMode = lib.mkEnableOption "Use TLS challenge instead of HTTP.";
+
+        tlsPort = lib.mkOption {
+          type = lib.types.port;
+          default = 443;
+          description = "Port to use for TLS challenge.";
+        };
+
+        environmentFile = lib.mkOption {
+          type = lib.types.nullOr lib.types.path;
           inherit (defaultAndText "environmentFile" null) default defaultText;
           description = ''
             Path to an EnvironmentFile for the cert's service containing any required and
