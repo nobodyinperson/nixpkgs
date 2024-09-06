@@ -5,6 +5,7 @@
 , hash
 , npmDepsHash
 , vendorHash
+, extraRuntimeInputs ? [ ]
 , nixUpdateExtraArgs ? [ ]
 }:
 
@@ -20,7 +21,6 @@
 , nixosTests
 , openssh
 , sqliteSupport ? true
-, extraRuntimeInputs ? []
 , xorg
 , runCommand
 , stdenv
