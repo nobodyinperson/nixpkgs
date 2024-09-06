@@ -1,7 +1,7 @@
 { lts ? false
 , version
 , rev ? null
-, srcOverrides ? {}
+, src ? null
 , hash
 , npmDepsHash
 , vendorHash
@@ -30,13 +30,13 @@
 
 let
   versionString = if builtins.isString rev then "${version}-${rev}" else version;
-  src = fetchFromGitea ({
+  src = if ! builtins.isNull src then src else fetchFromGitea ({
     domain = "codeberg.org";
     owner = "forgejo";
     repo = "forgejo";
     rev = if builtins.isString rev then rev else "v${version}";
     inherit hash;
-  } // srcOverrides);
+  });
 
   frontend = buildNpmPackage {
     pname = "forgejo-frontend";
@@ -160,7 +160,7 @@ buildGoModule rec {
   meta = {
     description = "Self-hosted lightweight software forge";
     homepage = "https://forgejo.org";
-    changelog = "https://codeberg.org/forgejo/forgejo/releases/tag/${src.rev}";
+    changelog = "https://codeberg.org/forgejo/forgejo/releases/tag/v${version}";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ emilylange urandom bendlas adamcstephens ];
     broken = stdenv.isDarwin;
