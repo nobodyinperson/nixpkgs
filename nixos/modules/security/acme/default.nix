@@ -493,12 +493,17 @@ let
                 fi
               '');
           }
-          //
-            optionalAttrs (data.listenHTTP != null && toInt (last (splitString ":" data.listenHTTP)) < 1024)
-              {
-                CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
-                AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
-              };
+          // (
+            let
+              needsToOpenPrivilegedPort =
+                (data.listenHTTP != null && toInt (last (splitString ":" data.listenHTTP)) < 1024)
+                || (data.tlsMode && data.tlsPort < 1024);
+            in
+            optionalAttrs needsToOpenPrivilegedPort {
+              CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
+              AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
+            }
+          );
 
         # Working directory will be /tmp
         script = (if (lockfileName == null) then lib.id else wrapInFlock "${lockdir}${lockfileName}") ''
