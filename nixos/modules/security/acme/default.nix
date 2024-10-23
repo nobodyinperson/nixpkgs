@@ -335,8 +335,14 @@ let
 
     renewService = lockfileName: {
       description = "Renew ACME certificate for ${cert}";
+      # stop conflicting services while certs are renewed
       conflicts = data.conflictingServices;
-      after = [ "network.target" "network-online.target" "acme-fixperms.service" "nss-lookup.target" ] ++ selfsignedDeps ++ optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
+      # start conflicting services again after cert renewal
+      # This causes systemd to issue a warning 'multiple trigger source candidates for exit status propagation',
+      # but this is more robust and not prone to race conditions as invoking systemctl in ExecStartPost/ExecStopPost
+      onSuccess = data.conflictingServices;
+      onFailure = data.conflictingServices;
+      after = [ "network.target" "network-online.target" "acme-fixperms.service" "nss-lookup.target" ] ++ data.conflictingServices ++ selfsignedDeps ++ lib.optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
       wants = [ "network-online.target" "acme-fixperms.service" ] ++ selfsignedDeps ++ optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
 
       # https://github.com/NixOS/nixpkgs/pull/81371#issuecomment-605526099
@@ -379,18 +385,14 @@ let
           (mapAttrsToList (k: v: "${k}:${v}") data.credentialFiles);
 
         # Run as root (Prefixed with +)
-        ExecStartPost =
-          let
-            manageServices =
-              cmd: services:
-              optionalString (services != [ ]) "systemctl --no-block ${cmd} ${escapeShellArgs services}";
-          in "+" + (pkgs.writeShellScript "acme-postrun" ''
+        ExecStartPost = "+" + (pkgs.writeShellScript "acme-postrun" ''
           cd /var/lib/acme/${escapeShellArg cert}
-          ${manageServices "reload-or-restart" data.conflictingServices}
           if [ -e renewed ]; then
             rm renewed
             ${data.postRun}
-            ${manageServices "try-reload-or-restart" data.reloadServices}
+            ${optionalString (data.reloadServices != [])
+                "systemctl --no-block try-reload-or-restart ${escapeShellArgs data.reloadServices}"
+            }
           fi
         '');
       } // (
