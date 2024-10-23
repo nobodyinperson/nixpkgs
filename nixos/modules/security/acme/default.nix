@@ -335,8 +335,14 @@ let
 
     renewService = lockfileName: {
       description = "Renew ACME certificate for ${cert}";
+      # stop conflicting services while certs are renewed
       conflicts = data.conflictingServices;
-      after = [ "network.target" "network-online.target" "acme-fixperms.service" "nss-lookup.target" ] ++ selfsignedDeps ++ optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
+      # start conflicting services again after cert renewal
+      # This causes systemd to issue a warning 'multiple trigger source candidates for exit status propagation',
+      # but this is more robust and not prone to race conditions as invoking systemctl in ExecStartPost/ExecStopPost
+      onSuccess = data.conflictingServices;
+      onFailure = data.conflictingServices;
+      after = [ "network.target" "network-online.target" "acme-fixperms.service" "nss-lookup.target" ] ++ data.conflictingServices ++ selfsignedDeps ++ lib.optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
       wants = [ "network-online.target" "acme-fixperms.service" ] ++ selfsignedDeps ++ optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
 
       # https://github.com/NixOS/nixpkgs/pull/81371#issuecomment-605526099
