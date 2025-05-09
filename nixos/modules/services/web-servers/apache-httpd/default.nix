@@ -48,8 +48,12 @@ let
   ) (filter (hostOpts: hostOpts.enableACME || hostOpts.useACMEHost != null) vhosts);
 
   vhostCertNames = unique (map (hostOpts: hostOpts.certName) acmeEnabledVhosts);
-  dependentCertNames = filter (cert: certs.${cert}.dnsProvider == null) vhostCertNames; # those that might depend on the HTTP server
-  independentCertNames = filter (cert: certs.${cert}.dnsProvider != null) vhostCertNames; # those that don't depend on the HTTP server
+  dependentCertNames = filter (
+    cert: certs.${cert}.dnsProvider == null && !certs.${cert}.tlsMode
+  ) vhostCertNames; # those that might depend on the HTTP server
+  independentCertNames = filter (
+    cert: certs.${cert}.dnsProvider != null || certs.${cert}.tlsMode
+  ) vhostCertNames; # those that don't depend on the HTTP server
 
   mkListenInfo =
     hostOpts:
@@ -206,15 +210,23 @@ let
       sslServerKey = if useACME then "${sslCertDir}/key.pem" else hostOpts.sslServerKey;
       sslServerChain = if useACME then "${sslCertDir}/chain.pem" else hostOpts.sslServerChain;
 
-      acmeChallenge = optionalString (useACME && hostOpts.acmeRoot != null) ''
-        Alias /.well-known/acme-challenge/ "${hostOpts.acmeRoot}/.well-known/acme-challenge/"
-        <Directory "${hostOpts.acmeRoot}">
-            AllowOverride None
-            Options MultiViews Indexes SymLinksIfOwnerMatch IncludesNoExec
-            Require method GET POST OPTIONS
-            Require all granted
-        </Directory>
-      '';
+      acmeChallenge =
+        optionalString
+          (
+            useACME
+            && hostOpts.acmeRoot != null
+            && certs.${hostOpts.hostName}.dnsProvider == null
+            && !certs.${hostOpts.hostName}.tlsMode
+          )
+          ''
+            Alias /.well-known/acme-challenge/ "${hostOpts.acmeRoot}/.well-known/acme-challenge/"
+            <Directory "${hostOpts.acmeRoot}">
+                AllowOverride None
+                Options MultiViews Indexes SymLinksIfOwnerMatch IncludesNoExec
+                Require method GET POST OPTIONS
+                Require all granted
+            </Directory>
+          '';
     in
     optionalString (listen != [ ]) ''
       <VirtualHost ${concatMapStringsSep " " (listen: "${listen.ip}:${toString listen.port}") listen}>
@@ -816,7 +828,11 @@ in
             # if acmeRoot is null inherit config.security.acme
             # Since config.security.acme.certs.<cert>.webroot's own default value
             # should take precedence set priority higher than mkOptionDefault
-            webroot = mkOverride (if hasRoot then 1000 else 2000) hostOpts.acmeRoot;
+            webroot =
+              if certs.${hostOpts.hostName}.tlsMode then
+                null
+              else
+                mkOverride (if hasRoot then 1000 else 2000) hostOpts.acmeRoot;
             # Also nudge dnsProvider to null in case it is inherited
             dnsProvider = mkOverride (if hasRoot then 1000 else 2000) null;
             extraDomainNames = hostOpts.serverAliases;
