@@ -139,7 +139,7 @@ in
     system = {
 
       path = lib.mkOption {
-        internal = true;
+        internal = false;
         description = ''
           The packages you want in the boot environment.
         '';

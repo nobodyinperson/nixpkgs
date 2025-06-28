@@ -10,7 +10,7 @@
 }:
 
 let
-  builder = replaceVars ./builder.pl {
+  defaultBuilder = replaceVars ./builder.pl {
     inherit (builtins) storeDir;
   };
 in
@@ -18,6 +18,8 @@ in
 lib.makeOverridable (
   {
     name,
+
+    builder ? defaultBuilder,
 
     # The manifest file (if any).  A symlink $out/manifest will be
     # created to it.
@@ -119,8 +121,8 @@ lib.makeOverridable (
         inherit version;
       }
     )
-    ''
+    (builtins.trace "builder = ${builder}" ''
       ${buildPackages.perl}/bin/perl -w ${builder}
       eval "$postBuild"
-    ''
+    '')
 )
