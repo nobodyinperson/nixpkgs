@@ -19340,6 +19340,14 @@
     github = "NobbZ";
     githubId = 58951;
   };
+  nobodyinperson = {
+    email = "nobodyinperson+nixpkgs@posteo.de";
+    matrix = "@nobodyinperson:matrix.org";
+    github = "nobodyinperson";
+    githubId = 19148271;
+    name = "Yann Büchau";
+    keys = [ { fingerprint = "6A72 8C86 17F7 4D4C EC28  5394 08E4 7245 1E1F 9E32"; } ];
+  };
   nocoolnametom = {
     email = "nocoolnametom@gmail.com";
     github = "nocoolnametom";
