@@ -1,28 +1,23 @@
 {
-  "node-fast-crc32c": {
-    "url": "https://github.com/overleaf/node-fast-crc32c",
-    "rev": "aae6b2a4c7a7a159395df9cc6c38dfde702d6f51",
-    "hash": "sha256-qLIhRZI1yDnJm1ss4ZRbcCdz7nk+rnc4EdGOIM32HfI="
+  "diff-match-patch": {
+    "url": "https://github.com/overleaf/diff-match-patch",
+    "rev": "89805f9c671a77a263fc53461acd62aa7498f688",
+    "hash": "sha256-MKqnBduRngD1z/s9Ya2sco3mxU7CoqUnxsdcj031tVU="
   },
   "socket.io": {
     "url": "https://github.com/overleaf/socket.io",
-    "rev": "7ac322c2a5b26a4647834868d78afbb0db1f8849",
-    "hash": "sha256-nh6BU2p1iKEwmw3edS18k3YWgEvHMb4SE5U24Ey9rFA="
+    "rev": "7814a16800a7accb646bd34ed0995cd474fb82f6",
+    "hash": "sha256-eNJA97Qb2Qr6IV4zgdhaaY2By3VeAVfjYuYJQb6qXTs="
   },
   "socket.io-client": {
     "url": "https://github.com/overleaf/socket.io-client",
     "rev": "805a73d2a2e2408982597d5986a401088b7aa588",
     "hash": "sha256-VNICbSXTcwtPVfQYH+jhp0TnJVGYyKn5NTziFUe94Vs="
   },
-  "diff-match-patch": {
-    "url": "https://github.com/overleaf/diff-match-patch",
-    "rev": "89805f9c671a77a263fc53461acd62aa7498f688",
-    "hash": "sha256-MKqnBduRngD1z/s9Ya2sco3mxU7CoqUnxsdcj031tVU="
-  },
   "multer": {
     "url": "https://github.com/overleaf/multer",
-    "rev": "e1df247fbf8e7590520d20ae3601eaef9f3d2e9e",
-    "hash": "sha256-izeFExOsqhOlslcOt3fmuZizzB9zSTT7B7vwkW8Mu7Y="
+    "rev": "199c5ff05bd375c508f4074498237baead7f5148",
+    "hash": "sha256-A2VBIDEAFt6N6PBFwNMcybefQoFJdMb6EPjS19Thms8="
   },
   "nodejs-referer-parser": {
     "url": "https://github.com/overleaf/nodejs-referer-parser",
@@ -31,13 +26,13 @@
   },
   "codemirror-autocomplete": {
     "url": "https://github.com/overleaf/codemirror-autocomplete",
-    "rev": "51ba3679f062cd0d216095bc1dc0b0cf64576939",
-    "hash": "sha256-X10Zo30akFe8SZ7FLEI8WvyiDRGnGVcMmTHogg+XAL0="
+    "rev": "6445cd056671c98d12d1c597ba705e11327ec4c5",
+    "hash": "sha256-EABhzZFRNIahxb33HRDKobHC2AV2v65kuzATfjYg/fk="
   },
   "codemirror-search": {
     "url": "https://github.com/overleaf/codemirror-search",
-    "rev": "29f7a871969ad64b89341bacbe5d46dda02eee12",
-    "hash": "sha256-gNe2qDaC+QAAIJJUKMlAfqkP4FeEVOBpzuPvBKl8Cqo="
+    "rev": "04380a528c339cd4b78fb10b3ef017f657ec17bd",
+    "hash": "sha256-eRxQinal9sp+F/PFhFlDZgE2gh+NxloNMhrmeIXi44U="
   },
   "codemirror-emacs": {
     "url": "https://github.com/overleaf/codemirror-emacs",
@@ -46,22 +41,22 @@
   },
   "codemirror-indentation-markers": {
     "url": "https://github.com/overleaf/codemirror-indentation-markers",
-    "rev": "1b1f93c0bcd04293aea6986aa2275185b2c56803",
-    "hash": "sha256-MhAhGWsnMCvL56kFbJxeFzM+HsrgnDg4ClKBU2nicAA="
+    "rev": "78264032eb286bc47871569ae87bff5ca1c6c161",
+    "hash": "sha256-Hm/6duFFj1EPGRIjf+y9DOlzZ/sePFLi4xbvOom9w8s="
   },
   "codemirror-vim": {
     "url": "https://github.com/overleaf/codemirror-vim",
-    "rev": "53ce7363f80fba133d51ee861ca5e9b49af8e96b",
-    "hash": "sha256-ktn+Fbg4HmgIBEsUUO2ecPSqyOv9Wwn5abM5FHwYhUk="
-  },
-  "daterangepicker": {
-    "url": "https://github.com/overleaf/daterangepicker",
-    "rev": "e496d2d44ca53e208c930e4cb4bcf29bcefa4550",
-    "hash": "sha256-avn774YhLIrziuF5NaNk1o2g9ItoxDaAzo11OmKEm5Y="
+    "rev": "1bef138382d948018f3f9b8a4d7a70ab61774e4b",
+    "hash": "sha256-zeMau87NjztCPq8Ke0w+vRKIPrsyR+gAr+qmkpeugfA="
   },
   "node-sandboxed-module": {
     "url": "https://github.com/overleaf/node-sandboxed-module",
     "rev": "cafa2d60f17ce75cc023e6f296eb8de79d92d35d",
     "hash": "sha256-l9juAnwe1Xe91cfFA+OJPWNo4FxdI+6T01jIeFm27W0="
+  },
+  "node-fast-crc32c": {
+    "url": "https://github.com/overleaf/node-fast-crc32c",
+    "rev": "aae6b2a4c7a7a159395df9cc6c38dfde702d6f51",
+    "hash": "sha256-qLIhRZI1yDnJm1ss4ZRbcCdz7nk+rnc4EdGOIM32HfI="
   }
 }

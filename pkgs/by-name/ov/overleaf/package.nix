@@ -1,7 +1,9 @@
 {
   lib,
   buildNpmPackage,
-  nodejs_18,
+  nodejs_20,
+  node-gyp,
+  node-pre-gyp,
   fetchFromGitHub,
   fetchgit,
 }:
@@ -34,15 +36,15 @@ let
   );
 in
 
-(buildNpmPackage.override { nodejs = nodejs_18; }) {
+(buildNpmPackage.override { nodejs = nodejs_20; }) {
   pname = "overleaf";
-  version = "5.1";
+  version = "5.5";
 
   src = fetchFromGitHub {
     owner = "overleaf";
     repo = "overleaf";
-    rev = "a55d9fcf38755c6d982ddcbb0cd092b37d9879fa";
-    hash = "sha256-SThESUyzQBbmiBTg7l/xpTvZ3chxXWAma5SRkjPhn04=";
+    rev = "25577379fc4c3c1d6aa4569f1fa8547c541c848f";
+    hash = "sha256-y32b1kbEZ9GkLEO3Bmli9EAg+WYkn5NIUmG2McXCheM=";
   };
 
   # Patch all package.json to remove git dependencies
@@ -55,7 +57,7 @@ in
       sed -i libraries/codemirror-{autocomplete,search}/package.json -e 's|"prepare":|"build":|'
       find libraries -name "package.json" -exec sed -i {} \
         -e 's|"prepare":|"noprepare":|' \
-        -e 's|"build": "\(.*\.js\)"|"build": "${nodejs_18}/bin/node \1"|' \;
+        -e 's|"build": "\(.*\.js\)"|"build": "${nodejs_20}/bin/node \1"|' \;
     '';
 
   # Fix ace-builds path due to git dependencies workaround
@@ -73,7 +75,7 @@ in
       -e "s!'http://localhost:3000'!\`http://\''${process.env.WEB_API_HOST || process.env.WEB_HOST || 'localhost'}:\''${process.env.WEB_API_PORT || process.env.WEB_PORT || 3000}\`!"
   '';
 
-  npmDepsHash = "sha256-S1wLTeNlQwEpjiIcdviHhCNOL0X/gaApnFYoxZN75aU=";
+  npmDepsHash = "sha256-3NsVaj6F7rgG596yVRH28slV8jnpRv2jcuTqjkFTU28=";
   npmRebuildFlags = [ "--ignore-scripts" ]; # If these scripts passed it would simplify everything
   env.NIX_CFLAGS_COMPILE = "-Wno-error";
 
@@ -83,15 +85,15 @@ in
       npm run postinstall
 
       # Without this, bcrypt and diskusage are not built
-      export CPPFLAGS="-I${nodejs_18}/include/node"
+      export CPPFLAGS="-I${nodejs_20}/include/node"
       (
         cd node_modules/bcrypt
-        ${nodejs_18.pkgs.node-pre-gyp}/bin/node-pre-gyp install --prefer-offline --build-from-source --nodedir=${nodejs_18}/include/node
+        ${node-pre-gyp}/bin/node-pre-gyp install --prefer-offline --build-from-source --nodedir=${nodejs_20}/include/node
       )
       (
         cd node_modules/diskusage
-        ${nodejs_18.pkgs.node-gyp}/bin/node-gyp configure --nodedir=${nodejs_18}/include/node
-        ${nodejs_18.pkgs.node-gyp}/bin/node-gyp build --nodedir=${nodejs_18}/include/node
+        ${node-gyp}/bin/node-gyp configure --nodedir=${nodejs_20}/include/node
+        ${node-gyp}/bin/node-gyp build --nodedir=${nodejs_20}/include/node
       )
     '';
 
@@ -106,7 +108,7 @@ in
   postFixup =
     lib.concatMapStringsSep "\n"
       (app: ''
-        makeWrapper ${nodejs_18}/bin/node $out/bin/overleaf-${app} \
+        makeWrapper ${nodejs_20}/bin/node $out/bin/overleaf-${app} \
           --add-flags share/services/${app}/app.js \
           --chdir $out
       '')
